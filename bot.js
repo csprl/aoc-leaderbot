@@ -2,6 +2,7 @@ const config = require("./config.json");
 const got = require("got");
 const { CookieJar } = require("tough-cookie");
 const { Client, Intents, MessageEmbed } = require("discord.js");
+
 const client = new Client({ intents: [Intents.FLAGS.GUILDS] });
 
 const cookieJar = new CookieJar();
@@ -23,7 +24,7 @@ const updateLeaderboard = async () => {
   // Fetch leaderboard
   const data = await got(`https://adventofcode.com/2021/leaderboard/private/view/${config.leaderboardId}.json`, { cookieJar }).json();
   
-  // Format and sort board
+  // Format and sort data
   const board = Object.values(data.members);
   board.sort((a, b) => b.stars - a.stars);
 
@@ -44,7 +45,7 @@ client.on("interactionCreate", async interaction => {
 
     const embed = new MessageEmbed()
       .setTitle("Leaderboard")
-      .addFields(cachedLeaderboard.board.map(v => { return { name: v.name, value: v.stars.toString() } }))
+      .addFields(cachedLeaderboard.board.map(v => { return { name: v.name, value: v.stars.toString(), inline: true } }))
       .setTimestamp(cachedLeaderboard.timestamp);
     
     await interaction.reply({ embeds: [embed] });
