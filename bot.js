@@ -1,9 +1,9 @@
 const config = require("./config.json");
 const got = require("got");
 const { CookieJar } = require("tough-cookie");
-const { Client, Intents, MessageEmbed } = require("discord.js");
+const { Client, Events, EmbedBuilder, GatewayIntentBits } = require("discord.js");
 
-const client = new Client({ intents: [Intents.FLAGS.GUILDS] });
+const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
 const cookieJar = new CookieJar();
 cookieJar.setCookieSync(`session=${config.sessionCookie}`, "https://adventofcode.com", { http: true, secure: true });
@@ -22,7 +22,7 @@ const updateLeaderboard = async () => {
   }
 
   // Fetch leaderboard
-  const data = await got(`https://adventofcode.com/2021/leaderboard/private/view/${config.leaderboardId}.json`, { cookieJar }).json();
+  const data = await got(`https://adventofcode.com/${config.event}/leaderboard/private/view/${config.leaderboardId}.json`, { cookieJar }).json();
   
   // Format and sort data
   const board = Object.values(data.members);
@@ -33,17 +33,17 @@ const updateLeaderboard = async () => {
   cachedLeaderboard.timestamp = Date.now()
 }
 
-client.on("ready", () => {
+client.on(Events.ClientReady, () => {
   console.log(`Logged in as ${client.user.tag}!`);
 });
 
-client.on("interactionCreate", async interaction => {
+client.on(Events.InteractionCreate, async interaction => {
   if (!interaction.isCommand()) return;
 
   if (interaction.commandName === "leaderboard") {
     await updateLeaderboard();
 
-    const embed = new MessageEmbed()
+    const embed = new EmbedBuilder()
       .setTitle("Leaderboard")
       .addFields(cachedLeaderboard.board.map(v => { return { name: v.name, value: v.stars.toString(), inline: true } }))
       .setTimestamp(cachedLeaderboard.timestamp);
